@@ -1,9 +1,8 @@
+double R_a = 303000;
+double R_b = 99800;
 
-double R_a = 167000;
-double R_b = 33000;
-
-double R_f = 230000;
-double R_o = 100000;
+double R_f = 402000;
+double R_o = 99900;
 double R_s = 1;
 
 void setup() {
@@ -20,8 +19,11 @@ void loop() {
   double voltage = 4.88281*analog_voltage; //mV
   double current = 4.88281*analog_current; //mV
 
-  double Solar_V = voltage*(1+(R_a/R_b));
-  double Solar_I = current/(R_s*(1 + (R_f/R_o)));
+  double Solar_Vmv = voltage*(1+(R_a/R_b));
+  double Solar_Imv = current/(R_s*(1 + (R_f/R_o)));
+
+  double Solar_V = Solar_Vmv/1000;
+  double Solar_I = Solar_Imv/1000;
 
 
 
@@ -35,6 +37,11 @@ void loop() {
       digitalWrite(5, LOW);
       digitalWrite(6, HIGH);
     }
-        Serial.println(Solar_I);
-        Serial.println(current);
+        //Serial.println(Solar_I);
+        //Serial.println(current);
+        Serial.print (Solar_V);
+        Serial.print (",");
+        Serial.print (Solar_I);
+        Serial.println(" ");
+
 }
