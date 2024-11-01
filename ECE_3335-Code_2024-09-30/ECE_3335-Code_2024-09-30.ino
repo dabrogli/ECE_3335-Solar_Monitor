@@ -9,6 +9,8 @@
 #define R_volt_a 303000
 #define R_volt_b 99800
 
+//#include <LiquidCrystalDisplay.h>
+
 int raw_v_voltage = 0;
 int raw_v_current = 0;
 
@@ -24,13 +26,13 @@ void setup() {
   Serial.begin(9600);
   pinMode(pin_light, OUTPUT);
 
-  digitalWrite(pin_light, LOW);
+  digitalWrite(pin_light, HIGH);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
-  delay(100);
+  //delay(1000);
   //digitalWrite(pin_light, LOW);
   
   //delay(1000);
