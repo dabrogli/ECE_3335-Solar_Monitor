@@ -28,6 +28,9 @@ void loop() {
   double Solar_V = Solar_Vmv/1000;
   double Solar_I = Solar_Imv/1000;
   double Photodiode_I = Photodiode_Imv/1000;
+  double Photodiode_Irradience = Photodiode_I*31600;
+  double PanelPower_Wmv = Photodiode_Irradience*460.8; //mW
+  double PanelPower_W = PanelPower_Wmv/1000; // expected power in watts
 
   double AVSolar_V = 0;
   for (int i=0; i < 1000; i++) {
@@ -40,6 +43,9 @@ void loop() {
   AVSolar_I = AVSolar_I + Solar_I;
    }
   AVSolar_I = AVSolar_I/1000;
+
+  double AVPower = AVSolar_V*AVSolar_I; // determined power in watts
+  double Eff = AVPower/PanelPower_W; /// determined power in watts over expected power in watts
 
 
   delay(1000);
@@ -54,11 +60,16 @@ void loop() {
     }
         //Serial.println(Solar_I);
         //Serial.println(current);
+        Serial.print ("Voltage ->");
         Serial.print (AVSolar_V);
-        Serial.print (",");
+        Serial.print (" V, Current ->");
         Serial.print (AVSolar_I);
-        Serial.print (",");
-        Serial.print(Photodiode_Imv);
+        Serial.print (" A, Irradience ->");
+        Serial.print(Photodiode_Irradience);
+        Serial.print (", Power ->");
+        Serial.print(AVPower);
+        Serial.print (" W, Efficiency ->");
+        Serial.print(Eff);
         Serial.println(" ");
 
 }
