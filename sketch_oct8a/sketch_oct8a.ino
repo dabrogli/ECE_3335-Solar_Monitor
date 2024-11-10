@@ -1,66 +1,84 @@
-double R_a = 303000;
-double R_b = 99800;
+#include "solarMonitorLCD.h"
 
-double R_f = 402000;
-double R_o = 99900;
-double R_s = 1;
+#define R_volt_a 303000
+#define R_volt_b 99800
+
+#define R_curr_f 402000
+#define R_curr_o 99900
+#define R_curr_s 1
+
+#define R_phdi_f 1600
+
+#define average_points 1000
+
+#define analog_volt_pin A0
+#define analog_curr_pin A1
+#define analog_phdi_1_pin A2
+#define analog_phdi_2_pin A3
+
+#define rs 8
+#define e 13
+#define d4 12
+#define d5 11
+#define d6 10
+#define d7 9
+
+const double analog_to_mV = 5000.0 / 1024.0; // mV/points
+
+const double area_solar_cells_cm2 = 460.8;
 
 void setup() {
   Serial.begin(9600);
-  // put your setup code here, to run once:
 
+  solarMonitorLCD smLCD(rs, e, d4, d5, d6, d7);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  int analog_voltage = analogRead(A0);
-  int analog_current = analogRead(A1);
-  int analog_photodiode = analogRead(A2);
+  int analog_voltage = 0.0;
+  int analog_current = 0.0;
+  int analog_photodiode = 0.0;
+  
+  for (int i=0; i < average_points; i++) {
+    analog_voltage = analog_voltage + analogRead(analog_volt_pin);
+  }
+  analog_voltage = analog_voltage/average_points;
 
-  double voltage = 4.88281*analog_voltage; //mV
-  double current = 4.88281*analog_current; //mV
-  double photodiode = 4.88281*analog_photodiode; //mV
+  for (int i=0; i < average_points; i++) {
+    analog_current = analog_current + analogRead(analog_curr_pin);
+  }
+  analog_current = analog_current/average_points;
 
-  double Solar_Vmv = voltage*(1+(R_a/R_b));
-  double Solar_Imv = current/(R_s*(1 + (R_f/R_o)));
-  double Photodiode_Imv = photodiode/1600;
+  for (int i=0; i < average_points; i++) {
+    analog_photodiode = analog_photodiode + analogRead(analog_phdi_1_pin);
+  }
+  analog_photodiode = analog_photodiode/average_points;
 
-  double Solar_V = Solar_Vmv/1000;
-  double Solar_I = Solar_Imv/1000;
-  double Photodiode_I = Photodiode_Imv/1000;
+  double voltage_mV = analog_to_mV*analog_voltage; // mV
+  double current_mV = analog_to_mV*analog_current; // mV
+  double photodiode_mV = analog_to_mV*analog_photodiode; // mV
+
+  double Solar_V_mV = voltage_mV*(1+(R_volt_a/R_volt_b));
+  double Solar_I_mA = current_mV/(R_curr_s*(1 + (R_curr_f/R_curr_o)));
+  double Photodiode_I_mA = photodiode_mV/R_phdi_f;
+
+  double Solar_V = Solar_V_mV/1000;
+  double Solar_I = Solar_I_mA/1000;
+
+  double Photodiode_I = Photodiode_I_mA/1000;
   double Photodiode_Irradience = Photodiode_I*31600;
+
   double PanelPower_Wmv = Photodiode_Irradience*460.8; //mW
-  double PanelPower_W = PanelPower_Wmv/1000; // expected power in watts
+  double PanelPower_W = PanelPower_W/1000; // expected power in watts
 
-  double AVSolar_V = 0;
-  for (int i=0; i < 1000; i++) {
-  AVSolar_V = AVSolar_V + Solar_V;
-   }
-  AVSolar_V = AVSolar_V/1000;
-
-  double AVSolar_I = 0;
-  for (int i=0; i < 1000; i++) {
-  AVSolar_I = AVSolar_I + Solar_I;
-   }
-  AVSolar_I = AVSolar_I/1000;
-
-  double AVPower = AVSolar_V*AVSolar_I; // determined power in watts
-  double Eff = AVPower/PanelPower_W; /// determined power in watts over expected power in watts
-
+  double Power = Solar_V*Solar_I; // determined power in watts
+  double Eff = Power/PanelPower_W; /// determined power in watts over expected power in watts
 
   delay(1000);
 
-    if (analog_voltage>= 512) {
-      digitalWrite(5, HIGH);
-      digitalWrite(6, LOW);
-    }
-        if (analog_voltage< 512) {
-      digitalWrite(5, LOW);
-      digitalWrite(6, HIGH);
-    }
         //Serial.println(Solar_I);
         //Serial.println(current);
-        Serial.print ("Voltage ->");
+
+        /*Serial.print ("Voltage ->");
         Serial.print (AVSolar_V);
         Serial.print (" V, Current ->");
         Serial.print (AVSolar_I);
@@ -70,6 +88,6 @@ void loop() {
         Serial.print(AVPower);
         Serial.print (" W, Efficiency ->");
         Serial.print(Eff);
-        Serial.println(" ");
+        Serial.println(" ");*/
 
 }
