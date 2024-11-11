@@ -1,4 +1,5 @@
 #include "solarMonitorLCD.h"
+#include <DHT.h>
 
 #define R_volt_a 303000
 #define R_volt_b 99800
@@ -16,12 +17,18 @@
 #define analog_phdi_1_pin A2
 #define analog_phdi_2_pin A3
 
+#define DHTPIN 2        
+#define DHTTYPE DHT11 
+
+DHT dht(DHTPIN, DHTTYPE);
+
 #define rs 8
 #define e 13
 #define d4 12
 #define d5 11
 #define d6 10
 #define d7 9
+
 
 const double analog_to_mV = 5000.0 / 1024.0; // mV/points
 
@@ -57,6 +64,7 @@ void loop() {
   int analog_voltage = 0.0;
   int analog_current = 0.0;
   int analog_photodiode = 0.0;
+  float temperature = 0.0
   
   for (int i=0; i < average_points; i++) {
     analog_voltage = analog_voltage + analogRead(analog_volt_pin);
@@ -85,7 +93,7 @@ void loop() {
   double Solar_I = Solar_I_mA/1000;
 
   double Photodiode_I = Photodiode_I_mA/1000;
-  double Photodiode_Irradience = Photodiode_I*31600;
+  double Photodiode_Irradiance = Photodiode_I*31600;
 
   double PanelPower_Wmv = Photodiode_Irradience*460.8; //mW
   double PanelPower_W = PanelPower_W/1000; // expected power in watts
@@ -93,10 +101,13 @@ void loop() {
   double Power = Solar_V*Solar_I; // determined power in watts
   double Eff = Power/PanelPower_W; /// determined power in watts over expected power in watts
 
+  float temperature = dht.readTemperature();
+
   delay(1000);
 
         //Serial.println(Solar_I);
         //Serial.println(current);
+        //Serial.println(temperature);
 
         /*Serial.print ("Voltage ->");
         Serial.print (AVSolar_V);
