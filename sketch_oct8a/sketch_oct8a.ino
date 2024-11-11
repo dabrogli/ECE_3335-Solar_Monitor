@@ -29,8 +29,28 @@ const double area_solar_cells_cm2 = 460.8;
 
 void setup() {
   Serial.begin(9600);
+  
+  Serial.println("-----===Setup Begin===-----");
 
   solarMonitorLCD smLCD(rs, e, d4, d5, d6, d7);
+
+  double value_test = 13.456;
+
+  for (int x = 0; x < 1; x++){
+
+//Breaks here for some reason.
+    double value = 30.96;
+
+      Serial.println(value);
+      smLCD.write_pow(value);
+      smLCD.write_irrad(value);
+      smLCD.write_eff(value);
+      smLCD.write_temp(value);
+
+    delay(1000);
+  }
+  
+  Serial.println("-----===Setup Complete===-----\n");
 }
 
 void loop() {
