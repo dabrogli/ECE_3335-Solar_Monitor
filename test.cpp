@@ -35,6 +35,8 @@ void slice_number(double number, int length, char * output) {
 		int temp_number = (int) (snip_num / scale);
 		snip_num = snip_num - (int) (temp_number * scale);
 
+		output[char_pos] = '0' + temp_number;
+
 		pos--;
 		pow_pos--;
 	}
