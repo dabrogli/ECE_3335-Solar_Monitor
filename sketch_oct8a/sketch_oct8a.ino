@@ -36,18 +36,18 @@ void setup() {
 
   double value_test = 13.456;
 
-  for (int x = 0; x < 1; x++){
+  for (int x = -10; x < 10; x++){
 
-//Breaks here for some reason.
-    double value = 30.96;
-
+      double value = pow(3.14, x);
       Serial.println(value);
       smLCD.write_pow(value);
-      smLCD.write_irrad(value);
-      smLCD.write_eff(value);
-      smLCD.write_temp(value);
+      //smLCD.write_irrad(value);
+      //smLCD.write_eff(value);
+      //smLCD.write_temp(value);
 
-    delay(1000);
+      Serial.println();
+
+    delay(2000);
   }
   
   Serial.println("-----===Setup Complete===-----\n");

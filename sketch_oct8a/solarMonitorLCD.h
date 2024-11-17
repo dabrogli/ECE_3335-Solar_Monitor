@@ -15,7 +15,6 @@ class solarMonitorLCD {
       startup();
     }
   
-
     void startup() {
       (*lcd).clear();
 
@@ -92,56 +91,65 @@ class solarMonitorLCD {
     }
 
     void trim_input(double input, double input_max, int length, char* output) {
-
-      double max_log = log10(input_max);
-      double input_log = log10(input);
-
-      int max_place = (int) max_log;
-      int input_place = (int) input_log;
-
       length = length - 1;
 
-      double used_num = input;
+      double input_log = log10(input);
 
-      int max_index = length;
-      int min_index = -length;
+      int input_place = (int) (input_log);
 
-      int number_place = input_place;
+      int number_place = 0;
+      if (input_place >= 0) number_place = input_place;
+      else number_place = input_place - 1;
 
-      if (number_place < 0) {
-        number_place = 0; 
-      }
-      
+      int scale_power = length - number_place;
+
+      int snip_num, snip_pow;
+
       if (input_place > length - 1) {
         number_place = length - 1;
-        used_num = 10 * pow(10, length - 1) - 1;
+        snip_num = 10 * pow(10, length - 1) - 1;
+        snip_pow =  (int) log10(snip_num);
 
-      } else if (input_place <= -length + 1 || used_num == 0) {
+        Serial.println("Too Big.");
+
+      } else if (input_place <= -length + 2 || input == 0) {
         number_place = 0;
-        used_num = 0;
+        snip_num = 0;
+        snip_pow = 0;
+        Serial.println("Too Small.");
+      } else {
+        snip_num = round(input * pow(10, scale_power));
+        snip_pow =  (int) log10(snip_num);
       }
+      Serial.print("input_log: ");
+      Serial.println(input_log);
+      Serial.print("input_place: ");
+      Serial.println(input_place);
+
+
+      Serial.print("snip_num: ");
+      Serial.println(snip_num);
+      Serial.print("snip_pow: ");
+      Serial.println(snip_pow);
+
+      Serial.print("number_place: ");
+      Serial.println(number_place);
 
       for (int x = 0; x < length; x++) {
-
-        double scale = 0;
-        int temp_num = 0;
-
-      
-        scale = pow(10, number_place);
-
-        if (x >= length - 1) temp_num = (int) round(used_num / scale);
-        else temp_num = (int) (used_num / scale);
-
-        used_num = used_num - temp_num * scale;
+        double scale = pow(10, snip_pow);
+        int temp_num = snip_num / scale;
         
-        output[x] = '0' + temp_num;
-
-        if (number_place == 0) {
-          x++;
+        if (number_place == -1) {
           output[x] = '.';
-        }
+          x++;
+       }
+
+        output[x] = '0' + temp_num;
+        
+        snip_num = (int) snip_num - temp_num * scale;
 
         number_place--;
+        snip_pow--;
       }
     }
 };

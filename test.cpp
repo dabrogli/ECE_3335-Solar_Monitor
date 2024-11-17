@@ -4,8 +4,7 @@
 using namespace std;
 
 void slice_number(double number, int length, char * output) {
-	cout << "Num: " << number << "\n";
-	int pos = 0, scale_power = 0;
+	int pos = 0;
 
 	double limit = pow(10, length - 1);
 
@@ -19,11 +18,10 @@ void slice_number(double number, int length, char * output) {
 		if (number < pow(10, pos)) pos--;
 	}
 
-	scale_power = length - pos - 2;
+	int scale_power = length - pos - 2;
 	int snip_num = round(number * pow(10, scale_power));
 
 	for(int pow_pos = length - 2, char_pos = 0; char_pos < length; char_pos++) {
-
 		if (pos == -1) {
 			output[char_pos] = '.';
 			char_pos++;
@@ -40,25 +38,21 @@ void slice_number(double number, int length, char * output) {
 		pos--;
 		pow_pos--;
 	}
-
-	cout << "Out Num: " << output << "\n";
-	cout << "\n";
+	
+	output[length] = '\0';
 }
 
 int main() {
-	cout << "Hey bud.\n";
-
-	char out[5];
 
 	for (int p = -10; p < 11; p++) {
-/*		for (int n = 0; n < 10; n++) {
-			double num = n * pow(10, p);
-			slice_number(num, 5, out);
-		}/**/
-		slice_number(pow(3.15, p), 5, out);
+		char out[5];
+		double num = pow(10, p);
+		slice_number(num, sizeof(out) - 1, out);
+		
+		cout << "Num: " << num << "\n";
+		cout << "Out Num: " << out << "\n\n";
 
-	}/**/
-
+	}
 
 	return 0;
 }
