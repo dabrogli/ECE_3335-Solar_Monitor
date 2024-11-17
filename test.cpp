@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cmath>
 
+using namespace std;
+
 void slice_number(double number, int length, char * output) {
 	cout << "Num: " << number << "\n";
 	int pos = 0, scale_power = 0;
