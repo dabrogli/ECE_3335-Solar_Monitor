@@ -83,5 +83,71 @@ with open('2024-10-17_arduino_test_new_load_dep_01.csv', 'w', newline='') as csv
 			
 
 	ser.close()
-
 ##End of script
+
+#Updated needs to be tested
+
+import serial
+import time
+import io
+import csv
+from datetime import datetime
+
+
+ser = serial.Serial()
+sio = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
+
+# Serial information
+ser.port = 'COM11'  
+ser.baudrate = 9600
+
+
+csv_file_path = 'real_time_data.csv'
+with open(csv_file_path, 'a', newline='') as csvfile:
+    csv_writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    
+    
+    if csvfile.tell() == 0:
+        csv_writer.writerow(["Timestamp", "in_voltage", "v_vol_raw", "v_cur_raw", "v_in_meas", "i_in_meas"])
+
+    
+    ser.open()
+    time.sleep(0.1)
+
+
+    for v_in in range(0, 21):  # From 0V to 20V
+        input(f"Next: {v_in} V\nPress any key... >") 
+        
+      
+        for x in range(0, 100):
+            try:
+                
+                ser.flushInput()
+                ser.flushOutput()
+                sio.flush()
+                
+                ser_in_line = ser.readline().decode("utf-8").strip()
+                print(f"v_in {v_in}\t| x {x}\t| {ser_in_line}")
+                
+                ser_in_list = ser_in_line.split(",")
+                
+                
+                v_vol_raw = float(ser_in_list[0])
+                v_cur_raw = float(ser_in_list[1])
+                v_in_meas = float(ser_in_list[2])
+                i_in_meas = float(ser_in_list[3])
+                
+                
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+                
+              
+                csv_writer.writerow([timestamp, v_in, v_vol_raw, v_cur_raw, v_in_meas, i_in_meas])
+                csvfile.flush()  
+                
+            except (ValueError, IndexError):
+                x -= 1
+                continue
+
+    ser.close()
+
+
