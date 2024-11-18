@@ -29,7 +29,6 @@ DHT dht(DHTPIN, DHTTYPE);
 #define d6 10
 #define d7 9
 
-
 const double analog_to_mV = 5000.0 / 1024.0; // mV/points
 
 const double area_solar_cells_cm2 = 460.8;
@@ -39,20 +38,21 @@ void setup() {
   
   Serial.println("-----===Setup Begin===-----");
 
+  // Initialize LCD with specified pins
   solarMonitorLCD smLCD(rs, e, d4, d5, d6, d7);
 
   double value_test = 13.456;
 
-  for (int x = 0; x < 1; x++){
+  for (int x = 0; x < 1; x++) {
 
-//Breaks here for some reason.
+    // Breaks here for some reason.
     double value = 30.96;
 
-      Serial.println(value);
-      smLCD.write_pow(value);
-      smLCD.write_irrad(value);
-      smLCD.write_eff(value);
-      smLCD.write_temp(value);
+    Serial.println(value);
+    smLCD.write_pow(value);
+    smLCD.write_irrad(value);
+    smLCD.write_eff(value);
+    smLCD.write_temp(value);
 
     delay(1000);
   }
@@ -64,61 +64,61 @@ void loop() {
   int analog_voltage = 0.0;
   int analog_current = 0.0;
   int analog_photodiode = 0.0;
-  float temperature = 0.0
+  float temperature = 0.0; 
   
-  for (int i=0; i < average_points; i++) {
+  for (int i = 0; i < average_points; i++) {
     analog_voltage = analog_voltage + analogRead(analog_volt_pin);
   }
-  analog_voltage = analog_voltage/average_points;
+  analog_voltage = analog_voltage / average_points;
 
-  for (int i=0; i < average_points; i++) {
+  for (int i = 0; i < average_points; i++) {
     analog_current = analog_current + analogRead(analog_curr_pin);
   }
-  analog_current = analog_current/average_points;
+  analog_current = analog_current / average_points;
 
-  for (int i=0; i < average_points; i++) {
+  for (int i = 0; i < average_points; i++) {
     analog_photodiode = analog_photodiode + analogRead(analog_phdi_1_pin);
   }
-  analog_photodiode = analog_photodiode/average_points;
+  analog_photodiode = analog_photodiode / average_points;
 
-  double voltage_mV = analog_to_mV*analog_voltage; // mV
-  double current_mV = analog_to_mV*analog_current; // mV
-  double photodiode_mV = analog_to_mV*analog_photodiode; // mV
+  double voltage_mV = analog_to_mV * analog_voltage; // mV
+  double current_mV = analog_to_mV * analog_current; // mV
+  double photodiode_mV = analog_to_mV * analog_photodiode; // mV
 
-  double Solar_V_mV = voltage_mV*(1+(R_volt_a/R_volt_b));
-  double Solar_I_mA = current_mV/(R_curr_s*(1 + (R_curr_f/R_curr_o)));
-  double Photodiode_I_mA = photodiode_mV/R_phdi_f;
+  double Solar_V_mV = voltage_mV * (1 + (R_volt_a / R_volt_b));
+  double Solar_I_mA = current_mV / (R_curr_s * (1 + (R_curr_f / R_curr_o)));
+  double Photodiode_I_mA = photodiode_mV / R_phdi_f;
 
-  double Solar_V = Solar_V_mV/1000;
-  double Solar_I = Solar_I_mA/1000;
+  double Solar_V = Solar_V_mV / 1000;
+  double Solar_I = Solar_I_mA / 1000;
 
-  double Photodiode_I = Photodiode_I_mA/1000;
-  double Photodiode_Irradiance = Photodiode_I*31600;
+  double Photodiode_I = Photodiode_I_mA / 1000;
+  double Photodiode_Irradiance = Photodiode_I * 31600;
 
-  double PanelPower_Wmv = Photodiode_Irradience*460.8; //mW
-  double PanelPower_W = PanelPower_W/1000; // expected power in watts
 
-  double Power = Solar_V*Solar_I; // determined power in watts
-  double Eff = Power/PanelPower_W; /// determined power in watts over expected power in watts
+  double PanelPower_Wmv = Photodiode_Irradiance * 460.8; // mW
+  double PanelPower_W = PanelPower_Wmv / 1000; // Expected power in watts
 
-  float temperature = dht.readTemperature();
+  double Power = Solar_V * Solar_I; // Determined power in watts
+  double Eff = Power / PanelPower_W; // Determined power in watts over expected power in watts
+
+  float temperature = dht.readTemperature(); // Read temperature from DHT sensor
 
   delay(1000);
 
-        //Serial.println(Solar_I);
-        //Serial.println(current);
-        //Serial.println(temperature);
+  // Serial.println(Solar_I);
+  // Serial.println(current);
+  // Serial.println(temperature);
 
-        /*Serial.print ("Voltage ->");
-        Serial.print (AVSolar_V);
-        Serial.print (" V, Current ->");
-        Serial.print (AVSolar_I);
-        Serial.print (" A, Irradience ->");
-        Serial.print(Photodiode_Irradience);
-        Serial.print (", Power ->");
-        Serial.print(AVPower);
-        Serial.print (" W, Efficiency ->");
-        Serial.print(Eff);
-        Serial.println(" ");*/
-
+  /* Serial.print ("Voltage ->");
+  Serial.print (AVSolar_V);
+  Serial.print (" V, Current ->");
+  Serial.print (AVSolar_I);
+  Serial.print (" A, Irradience ->");
+  Serial.print(Photodiode_Irradiance);
+  Serial.print (", Power ->");
+  Serial.print(AVPower);
+  Serial.print (" W, Efficiency ->");
+  Serial.print(Eff);
+  Serial.println(" "); */
 }
