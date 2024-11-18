@@ -1,8 +1,5 @@
 #include <LiquidCrystal.h>
 
-using namespace std;
-
-
 #define size_pow 4;
 
 class solarMonitorLCD {
@@ -45,10 +42,10 @@ class solarMonitorLCD {
 
     }
 
-    void write_pow(double pow) {
-      char str_pow[] = "__._";
+    void write_pow(double power) {
+      char str_pow[5] = "__._";
 
-      trim_input(pow, 20.0, sizeof(str_pow), str_pow);
+      trim_input(power, sizeof(str_pow) - 1, str_pow);
 
       (*lcd).setCursor(2, 0);
 
@@ -56,9 +53,9 @@ class solarMonitorLCD {
     }
 
     void write_irrad(double irrad) {
-      char str_irrad[] = "__._";
+      char str_irrad[5] = "__._";
 
-      trim_input(irrad, 20.0, sizeof(str_irrad), str_irrad);
+      trim_input(irrad, sizeof(str_irrad) - 1, str_irrad);
 
       (*lcd).setCursor(2, 1);
 
@@ -66,9 +63,9 @@ class solarMonitorLCD {
     }
 
     void write_eff(double eff) {
-      char str_eff[] = "_._";
+      char str_eff[4] = "_._";
 
-      trim_input(eff, 100.0, sizeof(str_eff), str_eff);
+      trim_input(eff, sizeof(str_eff) - 1, str_eff);
 
       (*lcd).setCursor(11, 0);
 
@@ -76,9 +73,9 @@ class solarMonitorLCD {
     }
 
     void write_temp(double temp) {
-      char str_temp[] = "_._";
+      char str_temp[4] = "_._";
 
-      trim_input(temp, 20.0, sizeof(str_temp), str_temp);
+      trim_input(temp, sizeof(str_temp) - 1, str_temp);
 
       (*lcd).setCursor(11, 1);
 
@@ -90,66 +87,45 @@ class solarMonitorLCD {
       for (int x = 0; x < length; x++) (*lcd).print(lcd_out[x]);
     }
 
-    void trim_input(double input, double input_max, int length, char* output) {
-      length = length - 1;
+  void trim_input(double number, int length, char * output) {
+	int pos = 0;
 
-      double input_log = log10(input);
+	double limit = pow(10, length - 1);
 
-      int input_place = (int) (input_log);
+	if (number >= limit) number = limit - 1;
+	if (number < 0) number = 0;
 
-      int number_place = 0;
-      if (input_place >= 0) number_place = input_place;
-      else number_place = input_place - 1;
+	if (number < 1) {
+		pos = -1;
+	} else {
+		pos = (int) log10(number);
+		if (number < pow(10, pos)) pos--;
+	}
 
-      int scale_power = length - number_place;
+	int scale_power = length - pos - 2;
+	int snip_num = round(number * pow(10, scale_power));
 
-      int snip_num, snip_pow;
+	for(int pow_pos = length - 2, char_pos = 0; char_pos < length; char_pos++) {
+		if (pos == -1) {
+			output[char_pos] = '.';
+			char_pos++;
+		}
+		if (char_pos >= length) continue;
 
-      if (input_place > length - 1) {
-        number_place = length - 1;
-        snip_num = 10 * pow(10, length - 1) - 1;
-        snip_pow =  (int) log10(snip_num);
+		double scale = pow(10, pow_pos);
+		
+		int temp_number = (int) (snip_num / scale);
+    
+		snip_num = snip_num - (int) (temp_number * scale);
 
-        Serial.println("Too Big.");
+		output[char_pos] = '0' + temp_number;
 
-      } else if (input_place <= -length + 2 || input == 0) {
-        number_place = 0;
-        snip_num = 0;
-        snip_pow = 0;
-        Serial.println("Too Small.");
-      } else {
-        snip_num = round(input * pow(10, scale_power));
-        snip_pow =  (int) log10(snip_num);
-      }
-      Serial.print("input_log: ");
-      Serial.println(input_log);
-      Serial.print("input_place: ");
-      Serial.println(input_place);
-
-
-      Serial.print("snip_num: ");
-      Serial.println(snip_num);
-      Serial.print("snip_pow: ");
-      Serial.println(snip_pow);
-
-      Serial.print("number_place: ");
-      Serial.println(number_place);
-
-      for (int x = 0; x < length; x++) {
-        double scale = pow(10, snip_pow);
-        int temp_num = snip_num / scale;
-        
-        if (number_place == -1) {
-          output[x] = '.';
-          x++;
-       }
-
-        output[x] = '0' + temp_num;
-        
-        snip_num = (int) snip_num - temp_num * scale;
-
-        number_place--;
-        snip_pow--;
-      }
-    }
+		pos--;
+		pow_pos--;
+	}
+	
+	output[length] = '\0';
+  
+      Serial.println(output);
+  }
 };

@@ -43,16 +43,15 @@ void setup() {
 
   double value_test = 13.456;
 
-  for (int x = -10; x < 10; x++){
-
+  for (int x = -8; x < 11; x++){
       double value = pow(3.14, x);
       Serial.println(value);
-      smLCD.write_pow(value);
-      //smLCD.write_irrad(value);
-      //smLCD.write_eff(value);
-      //smLCD.write_temp(value);
 
-      Serial.println();
+      smLCD.write_pow(value);
+      smLCD.write_irrad(value);
+      smLCD.write_eff(value);
+      smLCD.write_temp(value);
+
 
     delay(2000);
   }
@@ -64,7 +63,7 @@ void loop() {
   int analog_voltage = 0.0;
   int analog_current = 0.0;
   int analog_photodiode = 0.0;
-  float temperature = 0.0
+  float temperature = 0.0;
   
   for (int i=0; i < average_points; i++) {
     analog_voltage = analog_voltage + analogRead(analog_volt_pin);
@@ -95,13 +94,13 @@ void loop() {
   double Photodiode_I = Photodiode_I_mA/1000;
   double Photodiode_Irradiance = Photodiode_I*31600;
 
-  double PanelPower_Wmv = Photodiode_Irradience*460.8; //mW
+  double PanelPower_Wmv = Photodiode_Irradiance*460.8; //mW
   double PanelPower_W = PanelPower_W/1000; // expected power in watts
 
   double Power = Solar_V*Solar_I; // determined power in watts
   double Eff = Power/PanelPower_W; /// determined power in watts over expected power in watts
 
-  float temperature = dht.readTemperature();
+  temperature = dht.readTemperature();
 
   delay(1000);
 
