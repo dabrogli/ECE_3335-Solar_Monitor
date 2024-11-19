@@ -29,6 +29,10 @@ DHT dht(DHTPIN, DHTTYPE);
 #define d6 10
 #define d7 9
 
+
+// Initialize LCD with specified pins
+solarMonitorLCD smLCD(rs, e, d4, d5, d6, d7);
+
 const double analog_to_mV = 5000.0 / 1024.0; // mV/points
 
 const double area_solar_cells_cm2 = 460.8;
@@ -38,14 +42,9 @@ void setup() {
   
   Serial.println("-----===Setup Begin===-----");
 
-  // Initialize LCD with specified pins
-  solarMonitorLCD smLCD(rs, e, d4, d5, d6, d7);
 
-  double value_test = 13.456;
-
-
-    delay(2000);
-  }
+  smLCD.startup();
+  delay(10000);
   
   Serial.println("-----===Setup Complete===-----\n");
 }
@@ -93,23 +92,34 @@ void loop() {
   double Eff = Power / PanelPower_W; // Determined power in watts over expected power in watts
 
 
-  float temperature = dht.readTemperature(); // Read temperature from DHT sensor
+  temperature = dht.readTemperature(); // Read temperature from DHT sensor
 
-  delay(1000);
 
   // Serial.println(Solar_I);
   // Serial.println(current);
   // Serial.println(temperature);
 
-  /* Serial.print ("Voltage ->");
-  Serial.print (AVSolar_V);
-  Serial.print (" V, Current ->");
-  Serial.print (AVSolar_I);
-  Serial.print (" A, Irradience ->");
+
+  Power = 0;
+  Eff = 0;
+  temperature = 0;
+  Photodiode_Irradiance = 0;
+/*
+  smLCD.write_pow(Power);
+  smLCD.write_irrad(Photodiode_Irradiance);
+  smLCD.write_temp(temperature);
+  smLCD.write_eff(Eff);
+  */
+  Serial.print ("Temperature ->");
+  Serial.print (temperature);
+  Serial.print ("C , Irradience ->");
   Serial.print(Photodiode_Irradiance);
-  Serial.print (", Power ->");
-  Serial.print(AVPower);
+  Serial.print (" mW/cm^2, Power ->");
+  Serial.print(Power);
   Serial.print (" W, Efficiency ->");
   Serial.print(Eff);
-  Serial.println(" "); */
+  Serial.println("%");
+
+  
+  delay(1000);
 }
