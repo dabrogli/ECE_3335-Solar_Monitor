@@ -12,7 +12,7 @@ baud_rate = 9600
 csv_file = "data.csv"
 
 # Load precomputed GHI statistics
-ghi_stats_file = '/mnt/data/dontuse2.xlsx'  # Replace with your file path if different
+ghi_stats_file = 'dontuse2.xlsx'  # Replace with your file path if different
 ghi_sheet_name = '561994_33.61_-102.02_tdy-2022'
 
 ghi_data = pd.read_excel(ghi_stats_file, sheet_name=ghi_sheet_name, skiprows=3, header=None)
