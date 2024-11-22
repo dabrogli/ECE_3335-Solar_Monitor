@@ -1,14 +1,15 @@
 #include "solarMonitorLCD.h"
 #include <DHT.h>
 
-#define R_volt_a 303000
-#define R_volt_b 99800
+#define R_volt_a 298000
+#define R_volt_b 99600
 
-#define R_curr_f 402000
+#define R_curr_f 398000
 #define R_curr_o 99900
-#define R_curr_s 1
+const double R_curr_s = 1.09;
 
-#define R_phdi_f 1600
+#define R_phdi_f_1 1600
+#define R_phdi_f_2 1600
 
 #define average_points 1000
 
@@ -37,14 +38,11 @@ const double area_solar_cells_cm2 = 460.8;
 
 void setup() {
   Serial.begin(9600);
-  
   Serial.println("\n\n-----===Setup Begin===-----");
   
   smLCD = new solarMonitorLCD(rs, e, d4, d5, d6, d7);
   
   Serial.println("-----===Setup Complete===-----");
-
-  
 }
 
 void loop() {
@@ -74,7 +72,7 @@ void loop() {
 
   double Solar_V_mV = voltage_mV * (1 + (R_volt_a / R_volt_b));
   double Solar_I_mA = current_mV / (R_curr_s * (1 + (R_curr_f / R_curr_o)));
-  double Photodiode_I_mA = photodiode_mV / R_phdi_f;
+  double Photodiode_I_mA = photodiode_mV / R_phdi_f_1;
 
   double Solar_V = Solar_V_mV / 1000;
   double Solar_I = Solar_I_mA / 1000;
@@ -89,19 +87,7 @@ void loop() {
   double Power = Solar_V * Solar_I; // Determined power in watts
   double Eff = Power / PanelPower_W * 100; // Determined power in watts over expected power in watts
 
-
   temperature = dht.readTemperature(); // Read temperature from DHT sensor
-
-
-  // Serial.println(Solar_I);
-  // Serial.println(current);
-  // Serial.println(temperature);
-
-
-  //Power = 0;
-  //Eff = 0;
-  //temperature = 0;
-  //Photodiode_Irradiance = 0;
   
   (*smLCD).write_pow(Power);
   (*smLCD).write_irrad(Photodiode_Irradiance);
@@ -117,7 +103,7 @@ void loop() {
   Serial.print(Power);
   Serial.print (" W, Efficiency ->");
   Serial.print(Eff);
-  Serial.println("%");
+  Serial.println(" %");
 
   delay(1000);
 }
