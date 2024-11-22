@@ -29,7 +29,6 @@ for ax, color, title, y_label in zip(axs.flatten(), colors, titles, y_labels):
     line, = ax.plot([], [], color=color)
     ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
     ax.set_ylabel(y_label, fontsize=12)
-    ax.set_ylim(0, None)  # Set minimum value to 0 and maximum to update dynamically
     ax.grid(True)
     lines.append(line)
 
@@ -79,15 +78,11 @@ def update(frame):
         power_window = power[mask]
         efficiency_window = efficiency[mask]
 
-        if timestamps_window.empty:
-            return
-
         for line, y_data in zip(lines, [temperature_window, irradiance_window, power_window, efficiency_window]):
             line.set_data(timestamps_window, y_data)
 
-        for ax, y_data in zip(axs.flatten(), [temperature_window, irradiance_window, power_window, efficiency_window]):
+        for ax in axs.flatten():
             ax.set_xlim(window_start, current_time)
-            ax.set_ylim(0, y_data.max() * 1.1)  # Keep minimum at 0, dynamically adjust maximum with 10% margin
             ax.relim()
             ax.autoscale_view()
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
