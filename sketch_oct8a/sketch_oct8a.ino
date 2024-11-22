@@ -12,26 +12,24 @@
 
 #define average_points 1000
 
-#define analog_volt_pin A0
-#define analog_curr_pin A1
-#define analog_phdi_1_pin A2
-#define analog_phdi_2_pin A3
+#define analog_volt_pin A3
+#define analog_curr_pin A2
+#define analog_phdi_1_pin A0
+#define analog_phdi_2_pin A0
 
 #define DHTPIN 2        
 #define DHTTYPE DHT11 
 
 DHT dht(DHTPIN, DHTTYPE);
 
-#define rs 8
-#define e 13
-#define d4 12
-#define d5 11
-#define d6 10
-#define d7 9
+#define rs 3
+#define e 4
+#define d4 5
+#define d5 6
+#define d6 7
+#define d7 8
 
-
-// Initialize LCD with specified pins
-solarMonitorLCD smLCD(rs, e, d4, d5, d6, d7);
+solarMonitorLCD* smLCD;
 
 const double analog_to_mV = 5000.0 / 1024.0; // mV/points
 
@@ -40,19 +38,19 @@ const double area_solar_cells_cm2 = 460.8;
 void setup() {
   Serial.begin(9600);
   
-  Serial.println("-----===Setup Begin===-----");
-
-
-  smLCD.startup();
-  delay(10000);
+  Serial.println("\n\n-----===Setup Begin===-----");
   
-  Serial.println("-----===Setup Complete===-----\n");
+  smLCD = new solarMonitorLCD(rs, e, d4, d5, d6, d7);
+  
+  Serial.println("-----===Setup Complete===-----");
+
+  
 }
 
 void loop() {
-  int analog_voltage = 0.0;
-  int analog_current = 0.0;
-  int analog_photodiode = 0.0;
+  double analog_voltage = 0.0;
+  double analog_current = 0.0;
+  double analog_photodiode = 0.0;
   float temperature = 0.0;
   
   for (int i = 0; i < average_points; i++) {
@@ -89,7 +87,7 @@ void loop() {
   double PanelPower_W = PanelPower_Wmv / 1000; // Expected power in watts
 
   double Power = Solar_V * Solar_I; // Determined power in watts
-  double Eff = Power / PanelPower_W; // Determined power in watts over expected power in watts
+  double Eff = Power / PanelPower_W * 100; // Determined power in watts over expected power in watts
 
 
   temperature = dht.readTemperature(); // Read temperature from DHT sensor
@@ -100,19 +98,20 @@ void loop() {
   // Serial.println(temperature);
 
 
-  Power = 0;
-  Eff = 0;
-  temperature = 0;
-  Photodiode_Irradiance = 0;
-/*
-  smLCD.write_pow(Power);
-  smLCD.write_irrad(Photodiode_Irradiance);
-  smLCD.write_temp(temperature);
-  smLCD.write_eff(Eff);
-  */
+  //Power = 0;
+  //Eff = 0;
+  //temperature = 0;
+  //Photodiode_Irradiance = 0;
+  
+  (*smLCD).write_pow(Power);
+  (*smLCD).write_irrad(Photodiode_Irradiance);
+  (*smLCD).write_temp(temperature);
+  (*smLCD).write_eff(Eff);
+  
+  
   Serial.print ("Temperature ->");
   Serial.print (temperature);
-  Serial.print ("C , Irradience ->");
+  Serial.print (" C , Irradience ->");
   Serial.print(Photodiode_Irradiance);
   Serial.print (" mW/cm^2, Power ->");
   Serial.print(Power);
@@ -120,6 +119,5 @@ void loop() {
   Serial.print(Eff);
   Serial.println("%");
 
-  
   delay(1000);
 }

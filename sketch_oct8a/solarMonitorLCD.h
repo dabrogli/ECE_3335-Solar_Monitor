@@ -126,6 +126,6 @@ class solarMonitorLCD {
 	
 	output[length] = '\0';
   
-      Serial.println(output);
+  //    Serial.println(output);
   }
 };
