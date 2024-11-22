@@ -11,25 +11,6 @@ arduino_port = '/dev/ttyUSB0'
 baud_rate = 9600
 csv_file = "data.csv"
 
-# Load precomputed GHI statistics
-ghi_stats_file = 'dontuse2.xlsx'  # Replace with your file path if different
-ghi_sheet_name = '561994_33.61_-102.02_tdy-2022'
-
-ghi_data = pd.read_excel(ghi_stats_file, sheet_name=ghi_sheet_name, skiprows=3, header=None)
-ghi_data.columns = [
-    'Year', 'Month', 'Day', 'Hour', 'Minute', 'GHI', 'DHI', 'DNI', 
-    'Other1', 'Other2', 'Other3', 'Other4', 'Other5', 'Other6', 
-    'Other7', 'Other8', 'Other9', 'Other10', 'Other11', 'Other12'
-]
-ghi_data['Datetime'] = pd.to_datetime(ghi_data[['Year', 'Month', 'Day', 'Hour', 'Minute']])
-ghi_data = ghi_data.set_index('Datetime')[['GHI']]
-ghi_data['Time of Day'] = ghi_data.index.time
-ghi_stats = ghi_data.groupby('Time of Day')['GHI'].agg(['mean', 'std'])
-ghi_stats['mean+std'] = ghi_stats['mean'] + ghi_stats['std']
-ghi_stats['mean-std'] = ghi_stats['mean'] - ghi_stats['std']
-ghi_stats['mean-std'] = ghi_stats['mean-std'].clip(lower=0)  # Ensure no negative values
-
-# Serial connection
 ser = serial.Serial(arduino_port, baud_rate, timeout=1)
 
 with open(csv_file, mode='w', newline='') as file:
@@ -41,28 +22,19 @@ fig.suptitle("Real-Time Sensor Data", fontsize=16, fontweight='bold')
 
 colors = ['blue', 'green', 'orange', 'red']
 titles = ["Temperature Over Time", "Irradiance Over Time", "Power Over Time", "Efficiency Over Time"]
-y_labels = ["Temperature (°C)", "Irradiance (W/m²)", "Power (W)", "Efficiency (%)"]
+y_labels = ["Temperature (°C)", "Irradiance (mW/cm²)", "Power (W)", "Efficiency (%)"]
 lines = []
 
 for ax, color, title, y_label in zip(axs.flatten(), colors, titles, y_labels):
     line, = ax.plot([], [], color=color)
     ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
     ax.set_ylabel(y_label, fontsize=12)
-    ax.set_ylim(0, None)  # Minimum value is fixed at 0
+    ax.set_ylim(0, None)  # Set minimum value to 0 and maximum to update dynamically
     ax.grid(True)
     lines.append(line)
 
 axs[1, 0].set_xlabel("Time", fontsize=12)
 axs[1, 1].set_xlabel("Time", fontsize=12)
-
-# Add GHI stats lines to the Irradiance graph
-irradiance_ax = axs[0, 1]  # Assuming Irradiance is the second plot
-ghi_stats_index = pd.to_datetime(ghi_stats.index, format='%H:%M:%S').time
-
-irradiance_ax.plot(ghi_stats_index, ghi_stats['mean'], color='cyan', label='Average Irradiance')
-irradiance_ax.plot(ghi_stats_index, ghi_stats['mean+std'], color='cyan', linestyle='dotted', label='Mean + Std Dev')
-irradiance_ax.plot(ghi_stats_index, ghi_stats['mean-std'], color='cyan', linestyle='dotted', label='Mean - Std Dev')
-irradiance_ax.legend(loc='upper left')
 
 start_time = None
 
