@@ -31,24 +31,28 @@ y_labels = [
     "Power (W)", "Efficiency (%)",
     "Voltage (V)", "Current (A)"
 ]
+line_labels = [
+    "Temperature", "Irradiance",
+    "Power", "Efficiency",
+    "Voltage", "Current"
+]
 lines = []
 
-for ax, color, title, y_label in zip(axs.flatten(), colors, titles, y_labels):
-    line, = ax.plot([], [], color=color)
+for ax, color, title, y_label, label in zip(axs.flatten(), colors, titles, y_labels, line_labels):
+    line, = ax.plot([], [], color=color, label=label)
     ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
     ax.set_ylabel(y_label, fontsize=12)
     ax.set_ylim(0, None)
     ax.grid(True)
+    ax.legend(loc="upper left")
     lines.append(line)
 
 axs[2, 0].set_xlabel("Time", fontsize=12)
 axs[2, 1].set_xlabel("Time", fontsize=12)
 
 power_ax = axs[1, 0]
-expected_power_line, = power_ax.plot([], [], color='purple', linestyle='dotted', label='Expected Power (W)')
-
-for ax in axs.flatten():
-    ax.legend(loc="upper left")
+expected_power_line, = power_ax.plot([], [], color='purple', linestyle='dotted', label='Expected Power')
+power_ax.legend(loc="upper left")
 
 start_time = None
 
