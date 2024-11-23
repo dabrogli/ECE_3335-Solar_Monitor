@@ -5,14 +5,16 @@
 class solarMonitorLCD {
   public:
     LiquidCrystal* lcd;
+    double power = 0, irrad = 0, eff = 0, temp = 0, volt = 0, curr = 0;
+
     solarMonitorLCD(int rs, int e, int d4, int d5, int d6, int d7){
       lcd = new LiquidCrystal(rs, e, d4, d5, d6, d7);
       (*lcd).begin(16, 2);
       (*lcd).clear();
-      startup();
+      startup_1();
     }
   
-    void startup() {
+    void startup_1() {
       (*lcd).clear();
 
       (*lcd).setCursor(0, 0);
@@ -41,6 +43,34 @@ class solarMonitorLCD {
       (*lcd).print("C|");
 
     }
+    
+    void startup_2() {
+      (*lcd).clear();
+
+      (*lcd).setCursor(0, 0);
+      (*lcd).print("V:");
+
+      (*lcd).setCursor(7, 0);
+      (*lcd).print("V|");
+
+      (*lcd).setCursor(0, 1);
+      (*lcd).print("C:");
+
+      (*lcd).setCursor(7, 1);
+      (*lcd).print("A|");
+    }
+
+    void update_screen_1() {
+      write_pow(power);
+      write_irrad(irrad);
+      write_temp(temp);
+      write_eff(eff);
+    }
+
+    void update_screen_2() {
+      write_volt(volt);
+      write_curr(curr);
+    }
 
     void write_pow(double power) {
       char str_pow[5] = "__._";
@@ -51,6 +81,28 @@ class solarMonitorLCD {
 
       safe_print_char(str_pow, sizeof(str_pow));
     }
+    
+
+    void write_volt(double volt) {
+      char str_volt[5] = "__._";
+
+      trim_input(volt, sizeof(str_volt) - 1, str_volt);
+
+      (*lcd).setCursor(2, 0);
+
+      safe_print_char(str_volt, sizeof(str_volt));
+    }
+
+    void write_curr(double curr) {
+      char str_curr[5] = "__._";
+
+      trim_input(curr, sizeof(str_curr) - 1, str_curr);
+
+      (*lcd).setCursor(2, 1);
+
+      safe_print_char(str_curr, sizeof(str_curr));
+    }
+    
 
     void write_irrad(double irrad) {
       char str_irrad[5] = "__._";
