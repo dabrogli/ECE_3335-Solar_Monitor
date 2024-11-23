@@ -54,7 +54,12 @@ power_ax = axs[1, 0]
 expected_power_line, = power_ax.plot([], [], color='purple', linestyle='dotted', label='Expected Power')
 power_ax.legend(loc="upper left")
 
+efficiency_ax = axs[1, 1]
+average_efficiency_text = efficiency_ax.text(0.02, 0.95, "", transform=efficiency_ax.transAxes, fontsize=12,
+                                             verticalalignment='top', bbox=dict(boxstyle="round", facecolor="white"))
+
 start_time = None
+last_average_update_time = datetime.now()
 
 def determine_window_size(start_time, current_time):
     elapsed_time = (current_time - start_time).total_seconds()
@@ -70,7 +75,7 @@ def determine_window_size(start_time, current_time):
         return timedelta(days=1)
 
 def update(frame):
-    global start_time
+    global start_time, last_average_update_time
     try:
         data = pd.read_csv(csv_file)
 
@@ -119,6 +124,12 @@ def update(frame):
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
             for label in ax.get_xticklabels():
                 label.set_rotation(45)
+
+        if (current_time - last_average_update_time).total_seconds() >= 30:
+            average_efficiency = efficiency.mean()
+            average_efficiency_text.set_text(f"Average Efficiency = {average_efficiency:.2f}%")
+            last_average_update_time = current_time
+
     except Exception as e:
         print(f"Error updating plot: {e}")
 
