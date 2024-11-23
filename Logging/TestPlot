@@ -1,3 +1,79 @@
+import serial
+import csv
+from datetime import datetime, timedelta
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import matplotlib.dates as mdates
+import threading
+
+arduino_port = '/dev/ttyUSB0'
+baud_rate = 9600
+csv_file = "data.csv"
+
+ser = serial.Serial(arduino_port, baud_rate, timeout=1)
+
+with open(csv_file, mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["Timestamp", "Temperature", "Irradiance", "Power", "Efficiency", "Voltage", "Current", "Expected Power"])
+
+fig, axs = plt.subplots(3, 2, figsize=(14, 12))
+fig.suptitle("Real-Time Solar Panel Monitoring Data", fontsize=16, fontweight='bold')
+
+colors = ['blue', 'green', 'orange', 'red', 'purple', 'cyan']
+titles = [
+    "Temperature Over Time", "Irradiance Over Time",
+    "Power Over Time", "Efficiency Over Time",
+    "Voltage Over Time", "Current Over Time"
+]
+y_labels = [
+    "Temperature (°C)", "Irradiance (mW/cm²)",
+    "Power (W)", "Efficiency (%)",
+    "Voltage (V)", "Current (A)"
+]
+line_labels = [
+    "Temperature", "Irradiance",
+    "Power", "Efficiency",
+    "Voltage", "Current"
+]
+lines = []
+
+for ax, color, title, y_label, label in zip(axs.flatten(), colors, titles, y_labels, line_labels):
+    line, = ax.plot([], [], color=color, label=label)
+    ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
+    ax.set_ylabel(y_label, fontsize=12)
+    ax.set_ylim(0, None)
+    ax.grid(True)
+    ax.legend(loc="upper left")
+    lines.append(line)
+
+axs[2, 0].set_xlabel("Time", fontsize=12)
+axs[2, 1].set_xlabel("Time", fontsize=12)
+
+power_ax = axs[1, 0]
+expected_power_line, = power_ax.plot([], [], color='purple', linestyle='dotted', label='Expected Power')
+power_ax.legend(loc="upper left")
+
+efficiency_ax = axs[1, 1]
+average_efficiency_text = efficiency_ax.text(0.02, 0.95, "", transform=efficiency_ax.transAxes, fontsize=12,
+                                             verticalalignment='top', bbox=dict(boxstyle="round", facecolor="white"))
+
+start_time = None
+last_average_update_time = datetime.now()
+
+def determine_window_size(start_time, current_time):
+    elapsed_time = (current_time - start_time).total_seconds()
+    if elapsed_time <= 60:
+        return timedelta(minutes=1)
+    elif elapsed_time <= 600:
+        return timedelta(minutes=10)
+    elif elapsed_time <= 3600:
+        return timedelta(hours=1)
+    elif elapsed_time <= 86400:
+        return timedelta(hours=12)
+    else:
+        return timedelta(days=1)
+
 def update(frame):
     global start_time, last_average_update_time
     try:
@@ -44,10 +120,10 @@ def update(frame):
             ax.set_xlim(window_start, current_time)
 
             if not y_data.empty:
-                y_max = y_data.max() * 1.1  # Dynamically adjust max value with 10% margin
-                ax.set_ylim(0, y_max)  # Minimum fixed at 0
+                y_max = y_data.max() * 1.1
+                ax.set_ylim(0, y_max)
             else:
-                ax.set_ylim(0, 1)  # Default range for empty data
+                ax.set_ylim(0, 1)
             
             ax.relim()
             ax.autoscale_view()
@@ -65,3 +141,39 @@ def update(frame):
 
     except Exception as e:
         print(f"Error updating plot: {e}")
+
+ani = animation.FuncAnimation(fig, update, interval=1000)
+
+def read_serial_data():
+    try:
+        with open(csv_file, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            while True:
+                line = ser.readline().decode('utf-8').strip()
+                print(f"Received: {line}")
+                if not line or "Temperature ->" not in line:
+                    continue
+                try:
+                    temp = float(line.split("Temperature ->")[1].split("C")[0].strip())
+                    irr = float(line.split("Irradience ->")[1].split("mW/cm^2")[0].strip())
+                    power = float(line.split("Panel Power ->")[1].split("W")[0].strip())
+                    voltage = float(line.split("Panel Voltage ->")[1].split("V")[0].strip())
+                    current = float(line.split("Panel Current ->")[1].split("A")[0].strip())
+                    expected_power = float(line.split("Irrad Power ->")[1].split("W")[0].strip())
+                    eff = float(line.split("Efficiency ->")[1].split("%")[0].strip()) if "Efficiency ->" in line else 0.0
+                    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    writer.writerow([timestamp, temp, irr, power, eff, voltage, current, expected_power])
+                    file.flush()
+                except Exception as e:
+                    print(f"Error parsing line: {line} | {e}")
+    except KeyboardInterrupt:
+        print("Exiting...")
+    finally:
+        ser.close()
+
+thread = threading.Thread(target=read_serial_data, daemon=True)
+thread.start()
+
+plt.tight_layout(rect=[0.05, 0.05, 0.95, 0.95])
+plt.subplots_adjust(hspace=0.5, wspace=0.3)
+plt.show()
