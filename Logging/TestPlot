@@ -35,12 +35,15 @@ y_labels = [
     "Voltage (V)", "Current (A)"
 ]
 lines = []
+line_labels = ["Temperature", "Irradiance", "Power", "Efficiency", "Voltage", "Current"]
 
-for ax, color, title, y_label in zip(axs.flatten(), colors, titles, y_labels):
-    line, = ax.plot([], [], color=color)
+for ax, color, title, y_label, label in zip(axs.flatten(), colors, titles, y_labels, line_labels):
+    line, = ax.plot([], [], color=color, label=label)
     ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
     ax.set_ylabel(y_label, fontsize=12)
+    ax.set_ylim(0, None)  # Ensure y-axis starts at 0
     ax.grid(True)
+    ax.legend(loc="upper left")  # Add legend to each subplot
     lines.append(line)
 
 axs[2, 0].set_xlabel("Time", fontsize=12)
@@ -92,11 +95,17 @@ def update(frame):
             return
 
         timestamps = pd.to_datetime(data["Timestamp"])
-        for line, column in zip(lines, ["Temperature", "Irradiance", "Power", "Efficiency", "Voltage", "Current"]):
-            line.set_data(timestamps, data[column])
-            ax = line.axes
-            ax.set_xlim(timestamps.iloc[0], timestamps.iloc[-1])
-            ax.set_ylim(0, data[column].max() * 1.1)
+        for line, column, ax in zip(lines, ["Temperature", "Irradiance", "Power", "Efficiency", "Voltage", "Current"], axs.flatten()):
+            y_data = data[column]
+            y_data = y_data[y_data >= 0]  # Ignore negative values
+            if not y_data.empty:
+                line.set_data(timestamps, y_data)
+                ax.set_xlim(timestamps.iloc[0], timestamps.iloc[-1])
+                y_max = max(1, y_data.max() * 1.1)  # Ensure non-zero upper limit
+                ax.set_ylim(0, y_max)
+            else:
+                line.set_data([], [])
+                ax.set_ylim(0, 1)  # Default ylim if no valid data
 
         for ax in axs.flatten():
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
