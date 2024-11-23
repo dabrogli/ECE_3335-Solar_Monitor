@@ -111,7 +111,8 @@ def read_serial_data():
                     temp = float(line.split("Temperature ->")[1].split("C")[0].strip())
                     irr = float(line.split("Irradience ->")[1].split("mW/cm^2")[0].strip())
                     power = float(line.split("Power ->")[1].split("W")[0].strip())
-                    eff = float(line.split("Efficiency ->")[1].split("%")[0].strip())
+                    # Handle missing Efficiency data
+                    eff = float(line.split("Efficiency ->")[1].split("%")[0].strip()) if "Efficiency ->" in line else 0.0
                     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     writer.writerow([timestamp, temp, irr, power, eff])
                     file.flush()
