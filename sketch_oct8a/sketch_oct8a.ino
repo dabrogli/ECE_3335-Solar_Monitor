@@ -53,7 +53,7 @@ void setup() {
   TCCR2A |= (1 << WGM21);
   TCCR2B |= (1 << CS20) | (1 << CS21);
 
-  TIMSK2 = /*(1 << OCIE2B) |*/ (1 << OCIE2A);
+  TIMSK2 = (1 << OCIE2A);
   sei();
 
   Serial.println("-----===Setup Complete===-----");
@@ -113,9 +113,15 @@ void loop() {
 
     Serial.print("Temperature ->");
     Serial.print(temperature);
-    Serial.print(" C , Irradience ->");
+    Serial.print(" C , Irradiance ->");
     Serial.print(Photodiode_Irradiance);
-    Serial.print(" mW/cm^2, Power ->");
+    Serial.print(" mW/cm^2 , Irrad Power ->");
+    Serial.print(PanelPower_W);
+    Serial.print(" W, Panel Current ->");
+    Serial.print(Solar_I);
+    Serial.print(" A, Panel Voltage ->");
+    Serial.print(Solar_V);
+    Serial.print(" V, Panel Power ->");
     Serial.print(Power);
     Serial.print(" W, Efficiency ->");
     Serial.print(Eff);
