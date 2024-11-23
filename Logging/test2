@@ -65,18 +65,17 @@ def update(frame):
     global start_time, expected_power_line
     try:
         data = pd.read_csv(csv_file).fillna(0)
-
         if data.empty:
             return
 
         timestamps = pd.to_datetime(data["Timestamp"])
-        temperature = data["Temperature"]
-        irradiance = data["Irradiance"]
-        power = data["Power"]
-        efficiency = data["Efficiency"]
-        voltage = data["Voltage"]
-        current = data["Current"]
-        expected_power = data["Expected Power"]
+        temperature = data["Temperature"].replace([float('inf'), -float('inf')], 0)
+        irradiance = data["Irradiance"].replace([float('inf'), -float('inf')], 0)
+        power = data["Power"].replace([float('inf'), -float('inf')], 0)
+        efficiency = data["Efficiency"].replace([float('inf'), -float('inf')], 0)
+        voltage = data["Voltage"].replace([float('inf'), -float('inf')], 0)
+        current = data["Current"].replace([float('inf'), -float('inf')], 0)
+        expected_power = data["Expected Power"].replace([float('inf'), -float('inf')], 0)
 
         if start_time is None and not timestamps.empty:
             start_time = timestamps.iloc[0]
