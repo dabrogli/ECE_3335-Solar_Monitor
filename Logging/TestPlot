@@ -85,38 +85,42 @@ def read_serial_data():
 
 def update(frame):
     try:
-        data = pd.read_csv(csv_file)
+        data = pd.read_csv(csv_file).fillna(0)
         if data.empty:
             return
 
         timestamps = pd.to_datetime(data["Timestamp"])
         for line, column, ax in zip(lines, ["Temperature", "Irradiance", "Power", "Efficiency", "Voltage", "Current"], axs.flatten()):
-            y_data = data[column]
-            y_data = y_data[y_data >= 0]
-            if not y_data.empty:
-                line.set_data(timestamps, y_data)
-                ax.set_xlim(timestamps.iloc[0], timestamps.iloc[-1])
-                y_max = max(1, y_data.max() * 1.1)
-                ax.set_ylim(0, y_max)
-            else:
-                line.set_data([], [])
-                ax.set_ylim(0, 1)
+            if column in data:
+                y_data = data[column]
+                y_data = y_data[y_data >= 0]
+                min_length = min(len(timestamps), len(y_data))
+                if min_length > 0:
+                    line.set_data(timestamps[:min_length], y_data[:min_length])
+                    ax.set_xlim(timestamps.iloc[0], timestamps.iloc[-1])
+                    y_max = max(1, y_data.max() * 1.1)
+                    ax.set_ylim(0, y_max)
+                else:
+                    line.set_data([], [])
+                    ax.set_ylim(0, 1)
 
         power_ax = axs[1, 0]
-        expected_power = data["Expected Power"]
-        expected_power = expected_power[expected_power >= 0]
-        if not expected_power.empty:
-            expected_power_line.set_data(timestamps, expected_power)
-            power_ax.set_xlim(timestamps.iloc[0], timestamps.iloc[-1])
-            y_max_power = max(1, max(data["Power"].max(), expected_power.max()) * 1.1)
-            power_ax.set_ylim(0, y_max_power)
+        if "Expected Power" in data:
+            expected_power = data["Expected Power"]
+            expected_power = expected_power[expected_power >= 0]
+            min_length = min(len(timestamps), len(expected_power))
+            if min_length > 0:
+                expected_power_line.set_data(timestamps[:min_length], expected_power[:min_length])
+                power_ax.set_xlim(timestamps.iloc[0], timestamps.iloc[-1])
+                y_max_power = max(1, max(data["Power"].max(), expected_power.max()) * 1.1)
+                power_ax.set_ylim(0, y_max_power)
 
         for ax in axs.flatten():
             ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
             for label in ax.get_xticklabels():
                 label.set_rotation(45)
     except Exception as e:
-        pass
+        print(f"Error updating plot: {e}")
 
 ani = animation.FuncAnimation(fig, update, interval=1000)
 
