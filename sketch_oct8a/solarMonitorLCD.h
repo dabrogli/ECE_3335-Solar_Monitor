@@ -81,7 +81,6 @@ class solarMonitorLCD {
 
       safe_print_char(str_pow, sizeof(str_pow));
     }
-    
 
     void write_volt(double volt) {
       char str_volt[5] = "__._";
@@ -102,7 +101,6 @@ class solarMonitorLCD {
 
       safe_print_char(str_curr, sizeof(str_curr));
     }
-    
 
     void write_irrad(double irrad) {
       char str_irrad[5] = "__._";
@@ -139,7 +137,7 @@ class solarMonitorLCD {
       for (int x = 0; x < length; x++) (*lcd).print(lcd_out[x]);
     }
 
-  void trim_input(double number, int length, char * output) {
+void trim_input(double number, int length, char * output) {
 	int pos = 0;
 
 	double limit = pow(10, length - 1);

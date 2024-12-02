@@ -39,7 +39,7 @@ const double analog_to_mV = 5000.0 / 1024.0;  // mV/points
 
 const double area_solar_cells_cm2 = 460.8;
 
-int countms = 0;
+int countms = 0, min = 0;
 
 int button_push_1 = 0, button_push_2 = 0;
 
@@ -52,15 +52,15 @@ void setup() {
   smLCD = new solarMonitorLCD(rs, e, d4, d5, d6, d7);
 
   cli();
-  TCCR2A = 0;
-  TCCR2B = 0;
-  TCNT2 = 0;
+  TCCR1A = 0;
+  TCCR1B = 0;
+  TCNT1 = 0;
 
-  OCR2A = 249;
-  TCCR2A |= (1 << WGM21);
-  TCCR2B |= (1 << CS20) | (1 << CS21);
+  OCR1A = 124;
+  TCCR1A |= (1 << WGM11);
+  TCCR1B |= (1 << CS10) /*| (1 << CS21)/* | (1 << CS22)*/;
 
-  TIMSK2 = (1 << OCIE2A);
+  TIMSK1 = (1 << OCIE1A);
   sei();
 
   Serial.println("-----===Setup Complete===-----");
@@ -69,7 +69,8 @@ void setup() {
 void loop() {
   double analog_voltage = 0.0;
   double analog_current = 0.0;
-  double analog_photodiode = 0.0;
+  double analog_photodiode_1 = 0.0;
+  double analog_photodiode_2 = 0.0;
   float temperature = 0.0;
 
   if (countms >= 1000) {
@@ -85,23 +86,32 @@ void loop() {
     analog_current = analog_current / average_points;
 
     for (int i = 0; i < average_points; i++) {
-      analog_photodiode = analog_photodiode + analogRead(analog_phdi_1_pin);
+      analog_photodiode_1 = analog_photodiode_1 + analogRead(analog_phdi_1_pin);
     }
-    analog_photodiode = analog_photodiode / average_points;
+    analog_photodiode_1 = analog_photodiode_1 / average_points;
+
+    for (int i = 0; i < average_points; i++) {
+      analog_photodiode_2 = analog_photodiode_2 + analogRead(analog_phdi_2_pin);
+    }
+    analog_photodiode_2 = analog_photodiode_2 / average_points;
 
     double voltage_mV = analog_to_mV * analog_voltage;        // mV
     double current_mV = analog_to_mV * analog_current;        // mV
-    double photodiode_mV = analog_to_mV * analog_photodiode;  // mV
+    double photodiode_mV_1 = analog_to_mV * analog_photodiode_1;  // mV
+    double photodiode_mV_2 = analog_to_mV * analog_photodiode_2;  // mV
 
     double Solar_V_mV = voltage_mV * (double)(1 + (R_volt_a / R_volt_b)) * 1.02;
     double Solar_I_mA = current_mV / (double)(R_curr_s * (1 + (R_curr_f / R_curr_o))) * 1.10;
-    double Photodiode_I_mA = photodiode_mV / (double) R_phdi_f_1;
+    double Photodiode_I_mA_1 = photodiode_mV_1 / (double) R_phdi_f_1;
+    double Photodiode_I_mA_2 = photodiode_mV_2 / (double) R_phdi_f_2;
 
     double Solar_V = Solar_V_mV / 1000;
     double Solar_I = Solar_I_mA / 1000;
 
-    double Photodiode_I = Photodiode_I_mA / 1000;
-    double Photodiode_Irradiance = Photodiode_I * 31600;
+    double Photodiode_I_1 = Photodiode_I_mA_1 / 1000;
+    double Photodiode_Irradiance = Photodiode_I_1 * 31600;
+
+    double Photodiode_I_2 = Photodiode_I_mA_2 / 1000;
 
     double PanelPower_Wmv = Photodiode_Irradiance * 460.8;  // mW
     double PanelPower_W = PanelPower_Wmv / 1000;            // Expected power in watts
@@ -124,9 +134,9 @@ void loop() {
 
     Serial.print("Temperature ->");
     Serial.print(temperature);
-    Serial.print(" C , Irradiance ->");
+    Serial.print(" C, Irradiance ->");
     Serial.print(Photodiode_Irradiance);
-    Serial.print(" mW/cm^2 , Irrad Power ->");
+    Serial.print(" mW/cm^2, Irrad Power ->");
     Serial.print(PanelPower_W);
     Serial.print(" W, Panel Current ->");
     Serial.print(Solar_I);
@@ -134,9 +144,13 @@ void loop() {
     Serial.print(Solar_V);
     Serial.print(" V, Panel Power ->");
     Serial.print(Power);
-    Serial.print(" W, Efficiency ->");
+    Serial.print(" W, Photodiode 1 Current ->");
+    Serial.print(Photodiode_I_1);
+    Serial.print(" A, Photodiode 2 Current ->");
+    Serial.print(Photodiode_I_2);
+    Serial.print(" A, Efficiency ->");
     Serial.print(Eff);
-    Serial.println(" %");
+    Serial.println("%");
 
     countms = 0;
   }
@@ -144,7 +158,7 @@ void loop() {
 
 void(* resetFunc) (void) = 0;
 
-ISR(TIMER2_COMPA_vect) {
+ISR(TIMER1_COMPA_vect) {
 
   int button_read_1 = digitalRead(button_1);
   int button_read_2 = digitalRead(button_2);
